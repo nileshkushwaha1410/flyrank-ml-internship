@@ -1,0 +1,2 @@
+# Replace this line with the direct URL of your deployed paper, e.g.:
+# https://<your-username>.github.io/<your-repo>/

@@ -1,2 +1,2 @@
 # Replace this line with the direct URL of your deployed paper, e.g.:
-# https://nileshkushwaha1410.github.io/flyrank-ml-internship/
+https://nileshkushwaha1410.github.io/flyrank-ml-internship/

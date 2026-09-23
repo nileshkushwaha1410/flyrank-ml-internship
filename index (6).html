@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Refresh Signal: Predicting Content Decline from Trailing Search Behavior</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAF6;
+    --surface: #F1EFE6;
+    --ink: #1C2333;
+    --ink-soft: #4B5468;
+    --rule: #D8D4C4;
+    --accent: #2F5D9F;
+    --flag: #B5661A;
+    --good: #3E7A4E;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171F;
+      --surface: #1B1F2A;
+      --ink: #E8E6DD;
+      --ink-soft: #A7ADBE;
+      --rule: #2C3140;
+      --accent: #7CA8E8;
+      --flag: #E0954D;
+      --good: #6FBF83;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171F; --surface: #1B1F2A; --ink: #E8E6DD; --ink-soft: #A7ADBE;
+    --rule: #2C3140; --accent: #7CA8E8; --flag: #E0954D; --good: #6FBF83;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .label, nav, .meta, .pill, button, .placeholder-tag, th, .bar-label, .bar-value {
+    font-family: 'Inter', -apple-system, sans-serif;
+  }
+  a { color: var(--accent); text-decoration-thickness: 1px; }
+  .wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+  header.top {
+    border-bottom: 1px solid var(--rule);
+    padding: 20px 24px;
+  }
+  header.top .inner {
+    max-width: 700px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.01em;
+  }
+  header.top .inner span:first-child { color: var(--ink); font-weight: 600; }
+
+  .hero { padding: 72px 0 40px; }
+  .meta {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.7rem);
+    font-weight: 600;
+    line-height: 1.15;
+    margin: 0 0 28px;
+    max-width: 16ch;
+  }
+  .abstract {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    padding: 22px 26px;
+    margin-top: 12px;
+    font-size: 1.02rem;
+  }
+  .abstract .label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  section { padding: 44px 0; border-top: 1px solid var(--rule); }
+  section:first-of-type { border-top: none; }
+  h2 {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 20px;
+  }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 28px 0 10px; }
+  p { margin: 0 0 16px; max-width: 66ch; }
+  ul, ol { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 8px; max-width: 62ch; }
+  code {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88em;
+    background: var(--surface);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .placeholder-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--flag);
+    border: 1px dashed var(--flag);
+    border-radius: 3px;
+    padding: 1px 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 20px; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; color: var(--ink-soft); font-size: 0.78rem; text-transform: none; }
+
+  .barchart { margin: 20px 0 24px; }
+  .bar-row { margin-bottom: 16px; }
+  .bar-label { font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 5px; display: flex; justify-content: space-between; }
+  .bar-track { background: var(--surface); border-radius: 3px; height: 26px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; display: flex; align-items: center; }
+  .bar-fill.baseline { background: var(--ink-soft); }
+  .bar-fill.model { background: var(--accent); }
+  .bar-value { color: #FAFAF6; font-size: 0.8rem; font-weight: 600; padding-left: 10px; }
+
+  .action-mix { display: flex; gap: 14px; flex-wrap: wrap; margin: 8px 0 22px; }
+  .action-card {
+    flex: 1; min-width: 140px;
+    background: var(--surface); border-radius: 4px; padding: 14px 16px;
+  }
+  .action-card .n { font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; }
+  .action-card .lbl { font-family: 'Inter', sans-serif; font-size: 0.78rem; color: var(--ink-soft); }
+
+  .limits li::marker { color: var(--flag); }
+
+  footer.bottom {
+    border-top: 1px solid var(--rule);
+    padding: 32px 0 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+  footer.bottom a { color: var(--ink-soft); }
+
+  @media (max-width: 520px) {
+    header.top .inner { flex-direction: column; gap: 4px; align-items: flex-start; }
+    .hero { padding-top: 48px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="inner">
+    <span>Refresh / Content Opportunity Scoring</span>
+    <span>FlyRank ML Internship — Search Intelligence</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="meta">Capstone research paper · <span class="placeholder-tag">DATE</span></div>
+    <h1>Refresh Signal: Predicting Content Decline from Trailing Search Behavior</h1>
+    <div class="abstract">
+      <span class="label">Abstract</span>
+      Which of a client's existing pages are worth reviewing for refresh, before their decline
+      becomes obvious in a monthly report? We build a leakage-safe classifier that predicts
+      content-level decline over a forward 30-day window (<code>last30</code>), using only
+      pre-label-period signal: trailing GSC/GA4 performance, prior-30-day query behavior
+      (<code>prev30</code>), and static content metadata. On a client-grouped held-out test set,
+      the model reaches a Precision@50 of <span class="placeholder-tag">MODEL P@50</span>,
+      against a Week-4 rule baseline of <span class="placeholder-tag">BASELINE P@50</span>. The
+      result is directional and decision-support only — it flags association, not a mechanism,
+      and makes no claim about Google's ranking algorithm.
+    </div>
+  </div>
+
+  <section id="intro">
+    <h2>Introduction</h2>
+    <p>
+      A content team managing hundreds or thousands of pages can't manually re-check every one
+      each month. The decision this work supports is narrow and practical: given everything
+      knowable about a page up to a point in time, which pages deserve a human look this week —
+      and why — before the decline shows up in a client's own monthly report.
+    </p>
+    <p>
+      This sits in the Refresh / Content Opportunity Scoring lane: score pages that are growing,
+      declining, recovering, or worth review, and output a ranked action list with a reason
+      attached to each item, not just a bare score.
+    </p>
+  </section>
+
+  <section id="data">
+    <h2>Data</h2>
+    <p>
+      FlyRank internship warehouse, release <span class="placeholder-tag">RELEASE VERSION</span>.
+      Four tables, joined at the <code>client_hash_id</code> / <code>content_hash_id</code> grain:
+    </p>
+    <ul>
+      <li><strong>dim_clients</strong> — filtered to clients with genuine <code>gsc_and_ga4</code> access.</li>
+      <li><strong>dim_content</strong> — filtered to published, non-deleted content created before the
+        analysis window started, so a "declined" label is even meaningful for that item.</li>
+      <li><strong>fact_content_daily_performance</strong> — trailing daily GSC/GA4 signal, used only for
+        dates strictly before the window began.</li>
+      <li><strong>fact_content_query_90d</strong> — the source of the label: pre-computed
+        <code>last30</code>/<code>prev30</code> impressions, clicks, and average position per
+        query, aggregated to content level.</li>
+    </ul>
+    <p>
+      Excluded, and why: content created after the window started (no trailing history to
+      score); content updated or re-optimized during the window itself (a real intervention would
+      be mixed into what's meant to be an organic-decline label); clients without full GSC+GA4
+      access (label would be built on incomplete signal). No client names, domains, raw URLs, or
+      query strings appear anywhere in this paper — only the dataset's own pseudonymous hashes.
+    </p>
+  </section>
+
+  <section id="method">
+    <h2>Methodology</h2>
+    <h3>Label</h3>
+    <p>
+      <code>is_declining</code> = 1 when average position worsened by at least
+      <code>POSITION_WORSENING_THRESHOLD</code> <strong>and</strong> either impressions or clicks
+      dropped by at least the configured threshold, comparing <code>last30</code> to
+      <code>prev30</code>. Both conditions are required so a single noisy metric can't flip the
+      label on its own.
+    </p>
+    <h3>Features</h3>
+    <p>
+      Trailing daily performance (pre-window), <code>prev30</code> query-level aggregates, and
+      static content metadata (search volume, competition, CPC, backlinks, word count, category
+      count, intent). Query-diversity features are derived from <code>prev30</code> rows only —
+      the warehouse's own full-90-day diversity columns span the label window and were confirmed,
+      not assumed, to leak: training the same model with and without them produced an inflated
+      Precision@50 on the leaky version. See Results.
+    </p>
+    <h3>Split</h3>
+    <p>
+      Grouped by <code>client_hash_id</code> (not time-aware — the release has one fixed window,
+      so client-level correlation, not date order, is the real leakage risk). Every client's
+      content sits entirely in train or entirely in test.
+    </p>
+    <h3>Model</h3>
+    <p>
+      Logistic regression, <code>class_weight="balanced"</code>. Chosen for interpretable
+      coefficients (each flagged item gets a reason code, not just a score) and because the
+      dataset size after aggregation doesn't warrant more model complexity than that.
+    </p>
+  </section>
+
+  <section id="results">
+    <h2>Results</h2>
+    <p>Precision@50, same test set, same metric as the Week-4 baseline:</p>
+    <div class="barchart">
+      <div class="bar-row">
+        <div class="bar-label"><span>Week-4 baseline (position-worsening rule)</span></div>
+        <div class="bar-track"><div class="bar-fill baseline" style="width: 30%;"><span class="bar-value">BASELINE P@50 <span class="placeholder-tag">fill in</span></span></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label"><span>Logistic regression (this notebook)</span></div>
+        <div class="bar-track"><div class="bar-fill model" style="width: 55%;"><span class="bar-value">MODEL P@50 <span class="placeholder-tag">fill in</span></span></div></div>
+      </div>
+    </div>
+    <p>
+      Honest-vs-leaky check: with the full-90-day content diversity columns included as features,
+      Precision@50 measured <span class="placeholder-tag">LEAKY P@50</span> — the gap between that
+      and the honest number above is itself the evidence that those columns were contaminated by
+      the label window, not a coincidence.
+    </p>
+    <p>
+      Positive rate of <code>is_declining</code> in the test set:
+      <span class="placeholder-tag">POSITIVE RATE</span>. Reported here so Precision@50 can be read
+      against how rare decline actually is, not in isolation.
+    </p>
+  </section>
+
+  <section id="limits">
+    <h2>Limitations &amp; Honest Framing</h2>
+    <ul class="limits">
+      <li><strong>Directional, not causal.</strong> This flags association between pre-label
+        signal and a forward outcome. It does not explain <em>why</em> a page declined, and it
+        makes no claim about Google's ranking algorithm.</li>
+      <li><strong>Single-window snapshot.</strong> One fixed <code>window_start</code>/<code>window_end</code>,
+        not a rolling monitor. A production version would need re-validation each time it's re-run.</li>
+      <li><strong>Click sparsity at content grain.</strong> Many query-level rows have zero clicks;
+        the label leans on impressions drop as the primary volume signal, clicks as secondary.</li>
+      <li><strong>New content is out of scope.</strong> Items created after the window started are
+        excluded entirely — this model only scores existing content with trailing history.</li>
+      <li><strong>Threshold choices are judgment calls</strong>, stated explicitly in the
+        notebook, not tuned to produce a flattering number.</li>
+    </ul>
+  </section>
+
+  <section id="recs">
+    <h2>Ranked Recommendations</h2>
+    <p>Action mix across the top-50 flagged items, per the notebook's operational gate
+      (<code>optimization_eligible_date</code> caps the action regardless of score):</p>
+    <div class="action-mix">
+      <div class="action-card"><div class="n placeholder-tag">n</div><div class="lbl">urgent_review</div></div>
+      <div class="action-card"><div class="n placeholder-tag">n</div><div class="lbl">scheduled_refresh</div></div>
+      <div class="action-card"><div class="n placeholder-tag">n</div><div class="lbl">monitor</div></div>
+    </div>
+    <p>
+      Most common reason code among flagged items: <span class="placeholder-tag">fill in from reason_code column</span>.
+      Full ranked list, with per-item reason codes and actions, is in
+      <code>work/outputs/model_action_score.csv</code> in the repo below.
+    </p>
+  </section>
+
+  <section id="repro">
+    <h2>Reproducibility</h2>
+    <ul>
+      <li>Repository: <a href="https://github.com/nileshkushwaha1410/flyrank-ml-internship" target="_blank" rel="noopener">github.com/nileshkushwaha1410/flyrank-ml-internship</a></li>
+      <li>Weekly notebooks: <code>work/notebooks/w01</code> through <code>w04</code></li>
+      <li>Modeling notebook: <code>work/notebooks/ml08_capstone_modeling_lane.ipynb</code></li>
+      <li>Ranked output: <code>work/outputs/model_action_score.csv</code></li>
+    </ul>
+  </section>
+
+  <footer class="bottom">
+    <p>Built on the FlyRank ML Internship dataset — <a href="https://flyrank.ai" target="_blank" rel="noopener">flyrank.ai</a>.</p>
+  </footer>
+
+</div>
+</body>
+</html>
